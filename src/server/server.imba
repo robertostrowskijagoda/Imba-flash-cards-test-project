@@ -23,7 +23,6 @@ db.prepare("""
 """).run()
 
 let app = express()
-app.use(express.json())
 
 app.get "/", do(req, res)
 	res.send index.body
@@ -49,13 +48,14 @@ app.post "/api/check", do(req,res)
 	let score = 0
 	for item in answers
 		let correct = db.prepare("SELECT correct FROM answers WHERE id = ?").get(item.answer_id)
-		if correct?.correct == 1
+		if correct.correct == 1
 			score++
 	res.json({score})
 
 let dir = path.resolve()
-app.use(express.static(path.join(dir, "dist")))
-
+let static-path = path.join(dir, "dist/public/assets");
+app.use("/assets", express.static(static-path))
+console.log("Path: {static-path}")
 app.listen(8080, do
 	console.log "✅ Server running at http://localhost:8080"
 )

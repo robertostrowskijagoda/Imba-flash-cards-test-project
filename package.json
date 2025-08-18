@@ -4,7 +4,10 @@
     "dev": "imba -w ./src/server/server.imba",
     "build": "imba build ./src/server/server.imba",
     "preview": "node dist/server.js",
-    "prod": "npx pm2 start dist/server.js"
+    "prod": "npx pm2 start dist/server.js",
+
+    "start": "npx pm2 stop 0 & npm run build & npx pm2 start dist/server.js",
+    "stop": "npx pm2 stop 0"
   },
   "dependencies": {
     "express": "^5.1.0",
