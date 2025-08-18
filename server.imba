@@ -1,4 +1,4 @@
-import index from './index.html'
+import index from './src/client/index.html'
 import express from 'express'
 const app = express!
 const port = process.env.PORT or 3000

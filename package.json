@@ -1,13 +1,15 @@
 {
   "name": "Imba-flash-cards-test-project",
   "scripts": {
-    "dev": "imba -w server.imba",
-    "build": "imba build server.imba",
+    "dev": "imba -w ./src/server/server.imba",
+    "build": "imba build ./src/server/server.imba",
     "preview": "node dist/server.js",
     "prod": "npx pm2 start dist/server.js"
   },
   "dependencies": {
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "better-sqlite3": "^9.0.0",
+    "axios": "^1.11.0"
   },
   "devDependencies": {
     "imba": "^2.0.0-alpha.247"
