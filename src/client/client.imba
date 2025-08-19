@@ -5,8 +5,8 @@ tag QuizPage
 	prop answers = {}
 	prop loaded? = no
 
-	def init
-		const res = await fetch "/api/questions"
+	def mount
+		const res = await window.fetch "/api/questions"
 		const data = await res.json!
 		questions = data
 		loaded? = yes
@@ -16,7 +16,7 @@ tag QuizPage
 		answers[qid] = aid
 
 	def submit
-		const res = await fetch '/api/check', {
+		const res = await window.fetch '/api/check', {
 			method: 'POST'
 			headers: { 'Content-Type': 'application/json' }
 			body: JSON.stringify({
@@ -55,7 +55,7 @@ tag QuizPage
 tag SummaryPage
 	prop score = -1
 
-	def init
+	def mount
 		score = JSON.parse(window.localStorage.getItem "result").score
 
 	<self [mx:auto p:4]>
@@ -68,11 +68,13 @@ tag AdminPage
 	prop answers = Array(6).fill("")
 
 	def submit
+		console.log(question)
+		console.log(answers)
 		let formatted = answers.filter(do(a) a.trim()).map do(a, i)
 			{ text: a, correct: i == 0 }
 		
 		if question.trim() and formatted.length > 0
-			const res = await fetch "/api/questions", {
+			const res = await window.fetch "/api/questions", {
 				method: "POST"
 				headers: {"Content-Type": "application/json"}
 				body: JSON.stringify({ text: question, answers: formatted })
@@ -96,7 +98,7 @@ tag AdminPage
 				<input 
 					type="text" 
 					placeholder="Odpowiedź #{i+1} (pierwsza poprawna)"
-					bind=a
+					bind=answers[i]
 					[p:2 b:1px rd]
 				>
 			<button @click=submit [bg:green5 c:white px:4 py:2 rd:lg]> "Dodaj pytanie"
