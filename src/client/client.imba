@@ -29,7 +29,7 @@ tag QuizPage
 		window.localStorage.setItem "result", JSON.stringify(data)
 
 	<self [mx:auto p:4]>
-		<h1 [fs:2xl fw:bold mb:4]> "Quiz"
+		<h1 [fs:2xl fw:bold mb:4 b:flex jc:center]> "Quiz"
 		
 		<div route="/quiz">
 			unless loaded?
@@ -103,18 +103,37 @@ tag AdminPage
 
 tag App
 
-	css .nav-link
-		bgc:black
+	prop paths = [
+		{path: "/quiz", tg: QuizPage, name: "Quiz"}
+		{path: "/summary", tg: SummaryPage, name: "Podsumowanie"}
+		{path: "/admin", tg: AdminPage, name: "Admin"}
+	]
+#	css @keyframes rot
+#		0% rotate: 10deg
+#		100% rotate: 0deg
 
+	css .nav-link
+		bgc: yellow3
+		bd: 0px
+		c:green8
+		td: none
+		ff: "Comic Sans MS", "Comic Sans", cursive
+		fs: 50px
+		my: 30px
+		rd: 10px
+		rotate: 10deg rotate@hover: 0deg
+# 		@hover animation: rot 2s
 	<self>
-		<nav [bg:gray1 p:4 mb:4 d:flex gap:4 justify:center]>
-			<a [bgc:black] route-to="/quiz"> "Quiz"
-			<a.nav-link route-to="/summary"> "Podsumowanie"
-			<a.nav-link route-to="/admin"> "Admin"
+		<nav [bg:gray1 p:4 mxy:25 d:flex gap:4 jc:center bxs:md]>
+			for path of paths
+				<button.nav-link route-to=path.path> path.name
 
 		<main>
-			<QuizPage route="/quiz" default>
-			<SummaryPage route="/summary">
-			<AdminPage route="/admin">
+			<{paths[0].tg} route=paths[0].path>
+			<{paths[1].tg} route=paths[1].path>
+			<{paths[2].tg} route=paths[2].path>
+#			for path of paths
+#				<{path.tg} route=path.path>
+#				console.log("{path.tg.nodeName} {path.path}")
 
 imba.mount <App>
