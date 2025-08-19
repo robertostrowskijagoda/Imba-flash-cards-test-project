@@ -3,65 +3,56 @@ import { deepEqual } from 'assert'
 tag QuizPage
 	prop questions = []
 	prop answers = {}
-	prop loaded? = no
 
 	def mount
 		const res = await window.fetch "/api/questions"
 		const data = await res.json!
 		questions = data
-		loaded? = yes
 		imba.commit!
-
-	def toggleAnswer qid, aid
-		answers[qid] = aid
 
 	def submit
 		const res = await window.fetch '/api/check', {
 			method: 'POST'
 			headers: { 'Content-Type': 'application/json' }
-			body: JSON.stringify({
-				answers: Object.entries(answers).map do |qid, aid| { question_id: qid, answer_id: aid }
-			})
+			body: JSON.stringify(Object.entries(answers).map do |qid, aid| { question_id: qid, answer_id: aid })
 		}
 
 		const data = await res.json!
 		window.localStorage.setItem "answers", JSON.stringify(answers)
 		window.localStorage.setItem "result", JSON.stringify(data)
+		window.location.replace('/summary');
 
 	<self [mx:auto p:4]>
-		<h1 [fs:2xl fw:bold mb:4 b:flex jc:center]> "Quiz"
+		<h1 [fs:2xl fw:bold mb:4 b:flex ta:center fs:50px ff:"Comic Sans MS", "Comic Sans"]> "Quiz"
+		unless questions.length === 0
+			for q in questions
+				<div [mb:4 p:4 b:1px rd:lg bgc:red1]>
+					<p [fs:30px ta:center]> "{q.text}"
+					<div [mt:2]>
+						for ans in q.answers
+							<label [d:block my:1 c:gray6]>
+								<input [s:30px]
+									type='radio'
+									name="{q.id}"
+									checked=(answers[q.id] == ans.id)
+									@change=(answers[q.id] = ans.id)
+								>
+								<span [pos:relative t:-5px r:-5px fs:30px]> "{ans.text}"
 		
-		<div route="/quiz">
-			unless loaded?
-				<p> "Ładowanie..."
-			else
-				for q in questions
-					<div [mb:4 p:4 b:1px rd:lg]>
-						<p [fw:font-semibold]> "{q.text}"
-						
-						<div [mt:2]>
-							for ans in q.answers
-								<label [d:block my:1 c:gray6]>
-									<input 
-										type='radio'
-										name="{q.id}"
-										checked=(answers[q.id] == ans.id)
-										@change=(toggleAnswer(q.id, ans.id))
-									>
-									<span> "{ans.text}"
-		
-			<button [bg:blue5 c:white px:4 py:2 rd:16px] @click=submit route-to="/summary"> "Wyślij"
+			<button [bg:blue5 c:white px:4 py:2 rd:16px] @click=submit> "Wyślij"
 
 tag SummaryPage
-	prop score = -1
+	prop score = {score:0, total:0}
 
 	def mount
-		score = JSON.parse(window.localStorage.getItem "result").score
+		score = JSON.parse(window.localStorage.getItem "result")
+		imba.commit!
 
-	<self [mx:auto p:4]>
-		<h1 [fs:2xl fw:bold mb:4]> "Podsumowanie"
-		<p [fs:lg]> "Twój wynik: {score}"
-		<a route-to="/quiz" [c:blue5 hover:underline mt:4 d:block]> "Spróbuj ponownie"
+	<self [mx:auto p:4 js:center]>
+		if score
+			console.log(score)
+			<p [fs:lg js:center fs:50px mb:50px ff:"Comic Sans MS", "Comic Sans"]> "Twój wynik: {score.score} / {score.total}"
+			<a [js:center fs:50px mb:50px] route-to="/quiz" [c:blue5 hover:underline mt:4 d:block]> "Spróbuj ponownie"
 
 tag AdminPage
 	prop question = ""
@@ -70,10 +61,11 @@ tag AdminPage
 	def submit
 		console.log(question)
 		console.log(answers)
-		let formatted = answers.filter(do(a) a.trim()).map do(a, i)
-			{ text: a, correct: i == 0 }
-		
-		if question.trim() and formatted.length > 0
+		let formatted = answers.map do |a, i|
+			{ text: a, correct: i === 0 }
+		formatted = formatted.filter do |a|
+			a.text.trim()
+		if question.trim() and formatted.length > 1 and formatted[0] and formatted[0].text !== ""
 			const res = await window.fetch "/api/questions", {
 				method: "POST"
 				headers: {"Content-Type": "application/json"}
@@ -88,20 +80,20 @@ tag AdminPage
 			else
 				console.error("Wystąpił błąd podczas dodawania pytania.")
 		else
-			console.error("Pytanie i co najmniej jedna odpowiedź są wymagane.")
+			console.error("Pytanie i co najmniej dwie odpowiedzi (w tym poprawna) są wymagane.")
 
 	<self [mx:auto p:4]>
-		<h1 [fs:2xl fw:bold mb:4]> "Panel administratora"
-		<div [d:flex f:col gap:2]>
+		<h1 [fs:2xl fw:bold mb:4 js:center fs:50px mb:50px ff:"Comic Sans MS", "Comic Sans", cursive]> "Panel administratora"
+		<div [d:flex fld:column gap:2]>
 			<input type="text" placeholder="Pytanie" bind=question [p:2 b:1px rd]>
 			for a, i in answers
 				<input 
 					type="text" 
-					placeholder="Odpowiedź #{i+1} (pierwsza poprawna)"
+					placeholder="Odpowiedź #{i+1} {(i === 0 ? "" : "NIE")}POPRAWNA"
 					bind=answers[i]
-					[p:2 b:1px rd]
+					[p:2 b:1px rd:lg]
 				>
-			<button @click=submit [bg:green5 c:white px:4 py:2 rd:lg]> "Dodaj pytanie"
+			<button @click=submit [bg:green5 c:white px:2 py:4 rd:lg]> "Dodaj pytanie"
 
 tag App
 

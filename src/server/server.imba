@@ -25,10 +25,6 @@ db.prepare("""
 """).run!
 
 let app = new Hono!
-# .get '/static/*', serveStatic({ root: './dist/public' })
-
-app.get "/", do |c|
-	c.html index.body
 
 app.get "/api/questions", do |c|
 	let questions = db.prepare("SELECT * FROM questions").all!
@@ -41,19 +37,26 @@ app.get "/api/questions", do |c|
 app.post "/api/questions", do |c|
 	let {text, answers} = await c.req.json!
 	let info = db.prepare("INSERT INTO questions (text) VALUES (?)").run(text)
+	console.log(answers)
 	for ans in answers
 		db.prepare("INSERT INTO answers (question_id,text,correct) VALUES (?,?,?)")
 			.run(info.lastInsertRowid, ans.text, (if ans.correct then 1 else 0))
+	console.log("1: {JSON.stringify(db.prepare("SELECT * FROM questions").all())}")
+	console.log("2: {JSON.stringify(db.prepare("SELECT * FROM answers").all())}")
 	c.json {ok: true}
 
 app.post "/api/check", do |c|
 	let answers = await c.req.json!
 	let score = 0
 	for item in answers
-		let correct = db.prepare("SELECT correct FROM answers WHERE id = ?").get(item.answer_id)
-		if correct?.correct == 1
+		let correct = db.prepare("SELECT correct FROM answers WHERE id = ?").get(item.question_id[1])
+		console.log("Answer {JSON.stringify(item)} is {(correct ? "correct" : "NOT correct")}")
+		if correct and correct.correct === 1
 			score++
-	c.json {score: score}
+	c.json {score: score, total: answers.length}
+
+app.get "*", do |c|
+	c.html index.body
 
 imba.serve serve({fetch: app.fetch, port:8080})
 
