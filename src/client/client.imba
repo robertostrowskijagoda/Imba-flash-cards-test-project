@@ -124,7 +124,7 @@ tag App
 		rotate: 10deg rotate@hover: 0deg
 # 		@hover animation: rot 2s
 	<self>
-		<nav [bg:gray1 p:4 mxy:25 d:flex gap:4 jc:center bxs:md]>
+		<nav [bg:gray1 p:4 mxy:25 d:flex gap:10 jc:center bxs:md]>
 			for path of paths
 				<button.nav-link route-to=path.path> path.name
 
