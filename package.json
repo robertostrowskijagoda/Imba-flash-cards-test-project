@@ -8,8 +8,9 @@
     "start": "npm run stop && npm run build && npm run preview"
   },
   "dependencies": {
+    "@hono/node-server": "^1.19.0",
     "better-sqlite3": "^9.0.0",
-    "hono": "^4.9.2"
+    "hono": "^4.6.10"
   },
   "devDependencies": {
     "imba": "^2.0.0-alpha.237"
