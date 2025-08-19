@@ -1,13 +1,15 @@
+import { deepEqual } from 'assert'
+
 tag QuizPage
 	prop questions = []
 	prop answers = {}
 	prop loaded? = no
 
-	def mount
+	def init
 		const res = await fetch "/api/questions"
 		const data = await res.json!
 		questions = data
-		loaded = true
+		loaded? = yes
 		imba.commit!
 
 	def toggleAnswer qid, aid
@@ -18,45 +20,43 @@ tag QuizPage
 			method: 'POST'
 			headers: { 'Content-Type': 'application/json' }
 			body: JSON.stringify({
-				answers: Object.entries(answers).map do |qid, aid| {
-					question_id: qid
-					answer_id: aid
-				}
+				answers: Object.entries(answers).map do |qid, aid| { question_id: qid, answer_id: aid }
 			})
 		}
-		
+
 		const data = await res.json!
-		Imba.navigate '/summary', {let: data}
+		window.localStorage.setItem "answers", JSON.stringify(answers)
+		window.localStorage.setItem "result", JSON.stringify(data)
 
 	<self [mx:auto p:4]>
 		<h1 [fs:2xl fw:bold mb:4]> "Quiz"
 		
-		unless loaded?
-			<p> "Ładowanie..."
-		else
-			for q in questions
-				<div [mb:4 p:4 b:1px rd:lg]>
-					<p [fw:font-semibold]> "{q.text}"
-					
-					<div [mt:2]>
-						for ans in q.answers
-							<label [d:block my:1 c:gray6]>
-								<input 
-									type='radio'
-									name="{q.id}"
-									checked=(answers[q.id] == ans.id)
-									@change=(toggleAnswer(q.id, ans.id))
-								>
-								<span> "{ans.text}"
+		<div route="/quiz">
+			unless loaded?
+				<p> "Ładowanie..."
+			else
+				for q in questions
+					<div [mb:4 p:4 b:1px rd:lg]>
+						<p [fw:font-semibold]> "{q.text}"
+						
+						<div [mt:2]>
+							for ans in q.answers
+								<label [d:block my:1 c:gray6]>
+									<input 
+										type='radio'
+										name="{q.id}"
+										checked=(answers[q.id] == ans.id)
+										@change=(toggleAnswer(q.id, ans.id))
+									>
+									<span> "{ans.text}"
 		
-		<button [bg:blue5 c:white px:4 py:2 rd:lg] @click=submit> "Wyślij"
+			<button [bg:blue5 c:white px:4 py:2 rd:16px] @click=submit route-to="/summary"> "Wyślij"
 
 tag SummaryPage
-	prop score = 0
+	prop score = -1
 
-	def setup
-		let data = Imba.let
-		self.score = data?.score or 0
+	def init
+		score = JSON.parse(window.localStorage.getItem "result").score
 
 	<self [mx:auto p:4]>
 		<h1 [fs:2xl fw:bold mb:4]> "Podsumowanie"
@@ -102,18 +102,19 @@ tag AdminPage
 			<button @click=submit [bg:green5 c:white px:4 py:2 rd:lg]> "Dodaj pytanie"
 
 tag App
+
+	css .nav-link
+		bgc:black
+
 	<self>
-		<nav [bg:gray1 p:4 mb:4 d:flex gap:4]>
-			<a route-to="/quiz" [c:blue5 hover:underline]> "Quiz"
-			<a route-to="/summary" [c:blue5 hover:underline]> "Podsumowanie"
-			<a route-to="/admin" [c:blue5 hover:underline]> "Admin"
+		<nav [bg:gray1 p:4 mb:4 d:flex gap:4 justify:center]>
+			<a [bgc:black] route-to="/quiz"> "Quiz"
+			<a.nav-link route-to="/summary"> "Podsumowanie"
+			<a.nav-link route-to="/admin"> "Admin"
 
 		<main>
-			<div route="/quiz" default>
-				<QuizPage>
-			<div route="/summary">
-				<SummaryPage>
-			<div route="/admin">
-				<AdminPage>
+			<QuizPage route="/quiz" default>
+			<SummaryPage route="/summary">
+			<AdminPage route="/admin">
 
 imba.mount <App>

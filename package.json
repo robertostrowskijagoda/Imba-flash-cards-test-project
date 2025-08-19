@@ -4,16 +4,14 @@
     "dev": "imba -w ./src/server/server.imba",
     "build": "imba build ./src/server/server.imba",
     "preview": "node dist/server.js",
-    "prod": "npx pm2 start dist/server.js",
-
-    "start": "npx pm2 stop 0 & npm run build & npx pm2 start dist/server.js",
-    "stop": "npx pm2 stop 0"
+    "stop": "npx --yes kill-port 8080",
+    "start": "npm run stop && npm run build && npm run preview"
   },
   "dependencies": {
-    "express": "^5.1.0",
-    "better-sqlite3": "^9.0.0"
+    "better-sqlite3": "^9.0.0",
+    "hono": "^4.9.2"
   },
   "devDependencies": {
-    "imba": "^2.0.0-alpha.247"
+    "imba": "^2.0.0-alpha.237"
   }
 }
