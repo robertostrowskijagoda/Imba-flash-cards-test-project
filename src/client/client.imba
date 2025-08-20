@@ -1,3 +1,16 @@
+import { Magic } from 'magic-sdk'
+
+const magic = new Magic("pk_live_8660C390804C3649")
+
+def login email
+	const didToken = await magic.auth.loginWithMagicLink { email } # Czy nawiasy {} są tu potrzebne? Dlaczego?
+	await fetch '/api/session', {
+		method: 'POST'
+		headers: {
+			Authorization: "Bearer {didToken}",
+		}
+	}
+
 tag QuizPage
 	prop questions = []
 	prop answers = {}
@@ -12,18 +25,18 @@ tag QuizPage
 		const res = await window.fetch '/api/check', {
 			method: 'POST'
 			headers: { 'Content-Type': 'application/json' }
-			body: JSON.stringify(Array.from(Object.values(answers)))
+			body: JSON.stringify(Array.from(Object.values(answers))) # Czy to można napisać bardziej w IMBA stylu?
 		}
 		const data = await res.json!
-		window.localStorage.setItem("summary", JSON.stringify(data)) # USE EVENTS!
-		window.location.replace('/summary')
+		window.localStorage.setItem "summary", JSON.stringify(data) # USE EVENTS! Czy tu można napisać tak? window.localStorage.setItem "summary", JSON.stringify data
+		window.location.replace '/summary'
 
 	<self [mx:auto p:4]>
 		<h1 [fs:2xl fw:bold mb:4 b:flex ta:center fs:50px ff:"Comic Sans MS", "Comic Sans"]> "Quiz"
 		unless questions.length === 0
 			for q in questions
 				<div [mb:4 p:4 b:1px rd:lg bgc:red1]>
-					<p [fs:30px ta:center]> "{q.text}"
+					<p [fs:30px ta:center]> "Autor: {q.author} Pytanie: {q.text}"
 					<div [mt:2]>
 						for ans in q.answers
 							<label [d:block my:1 c:gray6]>
@@ -41,8 +54,8 @@ tag SummaryPage
 	prop score = {score:0, total:0}
 
 	def mount
-		score = JSON.parse(window.localStorage.getItem("summary")) # USE EVENTS!
-		window.localStorage.removeItem("summary") # USE EVENTS!
+		score = JSON.parse(window.localStorage.getItem "summary") # USE EVENTS! Czy tu można napisać tak? JSON.parse window.localStorage.getItem "summary"
+		window.localStorage.removeItem "summary" # USE EVENTS!
 
 	<self [mx:auto p:4 js:center]>
 		if score
@@ -52,11 +65,21 @@ tag SummaryPage
 
 tag AdminPage
 	prop question = ""
-	prop answers = Array(6).fill("")
+	prop answers = Array(6).fill "" # Czy tu można napisać tak? Array 6 .fill ""
 
+	def mount
+		const res = await window.fetch "/api/me"
+		if res.status === 401
+			console.log("LOGGING IN")
+			const email = window.prompt "Podaj swój email do logowania:"
+			if email
+				await login email
+				imba.commit!
+			else
+				window.location.replace "/quiz"
+	  
 	def submit
-		let formatted = answers.map do |ans, idx|
-			{ text: ans, correct: idx === 0 }
+		let formatted = answers.map do |ans, idx| { text: ans, correct: idx === 0 }
 		if formatted[0].text.trim!
 			formatted = formatted.filter do |data|
 				data.text.trim!
@@ -71,14 +94,19 @@ tag AdminPage
 					answers = Array(6).fill("")
 					imba.commit!
 				else
-					console.error("Wystąpił błąd podczas dodawania pytania.")
+					window.alert "Wystąpił błąd podczas dodawania pytania!"
 			else
-				console.error("Pytanie i co najmniej dwie odpowiedzi są wymagane.")
+				window.alert "Pytanie i co najmniej dwie odpowiedzi są wymagane!"
 		else
-			console.error("Poprawna odpowiedź jest wymagana!")
+			window.alert "Poprawna odpowiedź jest wymagana!"
 
 	def clear
-		await window.fetch "/api/questions", {method: "DELETE"}
+		await window.fetch "/api/questions", { method: "DELETE" }
+
+	def logOut
+		await window.fetch "/api/logout", { method: "POST" }
+		try await magic.user.logout!
+		window.location.replace "/quiz"
 
 	<self [mx:auto p:4]>
 		<h1 [fs:2xl fw:bold mb:4 js:center fs:50px mb:50px ff:"Comic Sans MS", "Comic Sans", cursive]> "Panel administratora"
@@ -93,6 +121,7 @@ tag AdminPage
 				>
 			<button @click=submit [bg:green5 c:white px:2 py:4 rd:lg]> "Dodaj pytanie"
 			<button @click=clear [bg:red5 c:white px:2 py:4 rd:lg]> "Skasuj wszystkie pytania"
+			<button @click=logOut [bg:red5 c:white px:2 py:4 rd:lg]> "Wyloguj się"
 
 tag App
 
@@ -131,3 +160,13 @@ tag App
 #				console.log("{path.tg.nodeName} {path.path}")
 
 imba.mount <App>
+
+# Pytania:
+# 1. W jaki sposób w Imba napisać coś takiego? metodaA(metodaB()).metodaC()
+# 2. Dlaczego nie działają mi eventy? Co robię źle? 
+# Zakładam, że problemem jest to, że próbuję posługiwać się eventami między różnymi tagami, 
+# które nie są aktywne wszystkie na raz, jak to więc zrobić poprawnie, żeby nie posługiwać się localStorage?
+# 3. Co robi taka operacja { email } ? Dlaczego niektóre metody są tak: metoda(email), a inne tak: metoda({email})?
+# 4. Dlaczego nie działa to co jest w liniach 158-160, a to co jest 155-157 działa?
+# 5. Dlaczego nie działa linia 147?
+# 6. Co byś poprawił tutaj w stylu/składni?
