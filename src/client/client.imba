@@ -45,7 +45,6 @@ tag QuizPage
 		<h1 [fs:2xl fw:bold mb:4 b:flex ta:center fs:50px ff:"Comic Sans MS", "Comic Sans"]> "Quiz"
 		unless questions.length === 0
 			for q in shuffle(questions)
-				console.log(q)
 				<div [mb:4 p:4 b:1px rd:lg bgc:red1]>
 					<p [fs:30px ta:center]> "Autor: {q.author} Pytanie: {q.text}"
 					<div [mt:2]>
@@ -70,7 +69,6 @@ tag SummaryPage
 
 	<self [mx:auto p:4 js:center]>
 		if score
-			console.log(score)
 			<p [fs:lg js:center fs:50px mb:50px ff:"Comic Sans MS", "Comic Sans"]> "Twój wynik: {score.score} / {score.total}"
 			<a [js:center fs:50px mb:50px] route-to="/quiz" [c:blue5 hover:underline mt:4 d:block]> "Spróbuj ponownie"
 
@@ -81,7 +79,6 @@ tag AdminPage
 	def mount
 		const res = await window.fetch "/api/me"
 		if res.status === 401
-			console.log("LOGGING IN")
 			const email = window.prompt "Podaj swój email do logowania:"
 			if email
 				await login email
