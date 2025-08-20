@@ -31,14 +31,25 @@ tag QuizPage
 		window.localStorage.setItem "summary", JSON.stringify(data) # USE EVENTS! Czy tu można napisać tak? window.localStorage.setItem "summary", JSON.stringify data
 		window.location.replace '/summary'
 
+	def shuffle array
+		let currentIndex = array.length
+		while currentIndex !== 0
+			currentIndex--
+			let randomIndex = Math.floor(Math.random() * array.length)
+			const tmp = array[currentIndex]
+			array[currentIndex] = array[randomIndex]
+			array[randomIndex] = tmp
+		array
+
 	<self [mx:auto p:4]>
 		<h1 [fs:2xl fw:bold mb:4 b:flex ta:center fs:50px ff:"Comic Sans MS", "Comic Sans"]> "Quiz"
 		unless questions.length === 0
-			for q in questions
+			for q in shuffle(questions)
+				console.log(q)
 				<div [mb:4 p:4 b:1px rd:lg bgc:red1]>
 					<p [fs:30px ta:center]> "Autor: {q.author} Pytanie: {q.text}"
 					<div [mt:2]>
-						for ans in q.answers
+						for ans in shuffle(q.answers)
 							<label [d:block my:1 c:gray6]>
 								<input [s:30px]
 									type='radio'
