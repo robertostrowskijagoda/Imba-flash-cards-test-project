@@ -1,5 +1,3 @@
-import { deepEqual } from 'assert'
-
 tag QuizPage
 	prop questions = []
 	prop answers = {}
@@ -14,13 +12,11 @@ tag QuizPage
 		const res = await window.fetch '/api/check', {
 			method: 'POST'
 			headers: { 'Content-Type': 'application/json' }
-			body: JSON.stringify(Object.entries(answers).map do |qid, aid| { question_id: qid, answer_id: aid })
+			body: JSON.stringify(Array.from(Object.values(answers)))
 		}
-
 		const data = await res.json!
-		window.localStorage.setItem "answers", JSON.stringify(answers)
-		window.localStorage.setItem "result", JSON.stringify(data)
-		window.location.replace('/summary');
+		window.localStorage.setItem("summary", JSON.stringify(data)) # USE EVENTS!
+		window.location.replace('/summary')
 
 	<self [mx:auto p:4]>
 		<h1 [fs:2xl fw:bold mb:4 b:flex ta:center fs:50px ff:"Comic Sans MS", "Comic Sans"]> "Quiz"
@@ -34,19 +30,19 @@ tag QuizPage
 								<input [s:30px]
 									type='radio'
 									name="{q.id}"
-									checked=(answers[q.id] == ans.id)
+									checked=(answers[q.id] === ans.id)
 									@change=(answers[q.id] = ans.id)
 								>
 								<span [pos:relative t:-5px r:-5px fs:30px]> "{ans.text}"
 		
-			<button [bg:blue5 c:white px:4 py:2 rd:16px] @click=submit> "Wyślij"
+			<button [js:center bg:blue5 c:white px:4 py:2 rd:16px w:50% mx:25% h:80px] @click=submit> "Wyślij"
 
 tag SummaryPage
 	prop score = {score:0, total:0}
 
 	def mount
-		score = JSON.parse(window.localStorage.getItem "result")
-		imba.commit!
+		score = JSON.parse(window.localStorage.getItem("summary")) # USE EVENTS!
+		window.localStorage.removeItem("summary") # USE EVENTS!
 
 	<self [mx:auto p:4 js:center]>
 		if score
@@ -59,28 +55,30 @@ tag AdminPage
 	prop answers = Array(6).fill("")
 
 	def submit
-		console.log(question)
-		console.log(answers)
-		let formatted = answers.map do |a, i|
-			{ text: a, correct: i === 0 }
-		formatted = formatted.filter do |a|
-			a.text.trim()
-		if question.trim() and formatted.length > 1 and formatted[0] and formatted[0].text !== ""
-			const res = await window.fetch "/api/questions", {
-				method: "POST"
-				headers: {"Content-Type": "application/json"}
-				body: JSON.stringify({ text: question, answers: formatted })
-			}
-			
-			if res.ok
-				question = ""
-				answers = Array(6).fill("")
-				imba.commit()
-				console.log("Dodano pytanie!") 
+		let formatted = answers.map do |ans, idx|
+			{ text: ans, correct: idx === 0 }
+		if formatted[0].text.trim!
+			formatted = formatted.filter do |data|
+				data.text.trim!
+			if question.trim! and formatted.length > 1
+				const res = await window.fetch "/api/questions", {
+					method: "POST"
+					headers: {"Content-Type": "application/json"}
+					body: JSON.stringify({ text: question, answers: formatted })
+				}
+				if res.ok
+					question = ""
+					answers = Array(6).fill("")
+					imba.commit!
+				else
+					console.error("Wystąpił błąd podczas dodawania pytania.")
 			else
-				console.error("Wystąpił błąd podczas dodawania pytania.")
+				console.error("Pytanie i co najmniej dwie odpowiedzi są wymagane.")
 		else
-			console.error("Pytanie i co najmniej dwie odpowiedzi (w tym poprawna) są wymagane.")
+			console.error("Poprawna odpowiedź jest wymagana!")
+
+	def clear
+		await window.fetch "/api/questions", {method: "DELETE"}
 
 	<self [mx:auto p:4]>
 		<h1 [fs:2xl fw:bold mb:4 js:center fs:50px mb:50px ff:"Comic Sans MS", "Comic Sans", cursive]> "Panel administratora"
@@ -94,13 +92,14 @@ tag AdminPage
 					[p:2 b:1px rd:lg]
 				>
 			<button @click=submit [bg:green5 c:white px:2 py:4 rd:lg]> "Dodaj pytanie"
+			<button @click=clear [bg:red5 c:white px:2 py:4 rd:lg]> "Skasuj wszystkie pytania"
 
 tag App
 
 	prop paths = [
-		{path: "/quiz", tg: QuizPage, name: "Quiz"}
-		{path: "/summary", tg: SummaryPage, name: "Podsumowanie"}
-		{path: "/admin", tg: AdminPage, name: "Admin"}
+		{path: "/quiz", tg: QuizPage, name: "Quiz", visible: yes}
+		{path: "/summary", tg: SummaryPage, name: "Podsumowanie", visible: no}
+		{path: "/admin", tg: AdminPage, name: "Admin", visible: yes}
 	]
 #	css @keyframes rot
 #		0% rotate: 10deg
@@ -120,7 +119,8 @@ tag App
 	<self>
 		<nav [bg:gray1 p:4 mxy:25 d:flex gap:10 jc:center bxs:md]>
 			for path of paths
-				<button.nav-link route-to=path.path> path.name
+				if path.visible
+					<button.nav-link route-to=path.path> path.name
 
 		<main>
 			<{paths[0].tg} route=paths[0].path>

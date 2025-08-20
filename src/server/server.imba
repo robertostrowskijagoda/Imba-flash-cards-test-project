@@ -31,27 +31,28 @@ app.get "/api/questions", do |c|
 	let result = []
 	for q in questions
 		let answers = db.prepare("SELECT * FROM answers WHERE question_id = ?").all(q.id)
-		result.push({id: q.id, text: q.text, answers})
+		result.push({id: q.id, text: q.text, answers: answers})
 	c.json result
 
 app.post "/api/questions", do |c|
 	let {text, answers} = await c.req.json!
 	let info = db.prepare("INSERT INTO questions (text) VALUES (?)").run(text)
-	console.log(answers)
 	for ans in answers
 		db.prepare("INSERT INTO answers (question_id,text,correct) VALUES (?,?,?)")
 			.run(info.lastInsertRowid, ans.text, (if ans.correct then 1 else 0))
-	console.log("1: {JSON.stringify(db.prepare("SELECT * FROM questions").all())}")
-	console.log("2: {JSON.stringify(db.prepare("SELECT * FROM answers").all())}")
+	c.json {ok: true}
+
+app.delete "/api/questions", do |c|
+	db.prepare("DELETE FROM answers").run!
+	db.prepare("DELETE FROM questions").run!
 	c.json {ok: true}
 
 app.post "/api/check", do |c|
 	let answers = await c.req.json!
 	let score = 0
 	for item in answers
-		let correct = db.prepare("SELECT correct FROM answers WHERE id = ?").get(item.question_id[1])
-		console.log("Answer {JSON.stringify(item)} is {(correct ? "correct" : "NOT correct")}")
-		if correct and correct.correct === 1
+		let data = db.prepare("SELECT correct FROM answers WHERE id = ?").get(item)
+		if data.correct
 			score++
 	c.json {score: score, total: answers.length}
 
