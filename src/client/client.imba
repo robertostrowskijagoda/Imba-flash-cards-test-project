@@ -18,7 +18,9 @@ tag QuizPage
 	def mount
 		const res = await window.fetch "/api/questions"
 		const data = await res.json!
-		questions = data
+		questions = shuffle data
+		for q for questions
+			q.answers = shuffle q.answers
 		imba.commit!
 
 	def submit
@@ -44,11 +46,11 @@ tag QuizPage
 	<self [mx:auto p:4]>
 		<h1 [fs:2xl fw:bold mb:4 b:flex ta:center fs:50px ff:"Comic Sans MS", "Comic Sans"]> "Quiz"
 		unless questions.length === 0
-			for q in shuffle(questions)
+			for q in questions
 				<div [mb:4 p:4 b:1px rd:lg bgc:red1]>
 					<p [fs:30px ta:center]> "Autor: {q.author} Pytanie: {q.text}"
 					<div [mt:2]>
-						for ans in shuffle(q.answers)
+						for ans in q.answers
 							<label [d:block my:1 c:gray6]>
 								<input [s:30px]
 									type='radio'
