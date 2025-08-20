@@ -19,7 +19,7 @@ tag QuizPage
 		const res = await window.fetch "/api/questions"
 		const data = await res.json!
 		questions = shuffle data
-		for q for questions
+		for q in questions
 			q.answers = shuffle q.answers
 		imba.commit!
 
@@ -157,7 +157,7 @@ tag App
 # 		@hover animation: rot 2s
 	<self>
 		<nav [bg:gray1 p:4 mxy:25 d:flex gap:10 jc:center bxs:md]>
-			for path of paths
+			for path in paths
 				if path.visible
 					<button.nav-link route-to=path.path> path.name
 
@@ -165,7 +165,7 @@ tag App
 			<{paths[0].tg} route=paths[0].path>
 			<{paths[1].tg} route=paths[1].path>
 			<{paths[2].tg} route=paths[2].path>
-#			for path of paths
+#			for path in paths
 #				<{path.tg} route=path.path>
 #				console.log("{path.tg.nodeName} {path.path}")
 
