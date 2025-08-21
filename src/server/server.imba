@@ -2,6 +2,7 @@ import { serve } from '@hono/node-server'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { setCookie, getCookie, deleteCookie } from 'hono/cookie'
 import { Hono } from 'hono'
+import { logger } from 'hono/logger'
 import { Magic } from '@magic-sdk/admin';
 import jwt from 'jsonwebtoken'
 import Database from 'better-sqlite3'
@@ -41,6 +42,8 @@ db.prepare("""
 """).run!
 
 let app = new Hono!
+
+app.use logger!
 
 app.use "/resources/*", serveStatic({root: "./resources"})
 

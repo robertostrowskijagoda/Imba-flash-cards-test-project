@@ -7,7 +7,7 @@ const magic = new Magic("pk_live_8660C390804C3649")
 
 i18n.use(i18next-lang-detector).use(
 	i18next-resources do |lang, ns| 
-		const res = await window.fetch "/api/resources/locales/{lang}/{ns}.json"
+		const res = await window.fetch "/resources/locales/{lang}/{ns}.json"
 		await res.text!
 	).init({
 	fallbackLng: "en"
