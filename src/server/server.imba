@@ -42,7 +42,9 @@ db.prepare("""
 
 let app = new Hono!
 
-app.get "/api/questions", do |c| # Dlaczego nie można zrobić "do (c)"? Na kursie mówili, że można...
+app.use "/resources/*", serveStatic({root: "./resources"})
+
+app.get "/api/questions", do(c)
 	let questions = db.prepare("SELECT * FROM questions").all!
 	let result = []
 	for q in questions
@@ -50,7 +52,7 @@ app.get "/api/questions", do |c| # Dlaczego nie można zrobić "do (c)"? Na kurs
 		result.push({id: q.id, text: q.text, author: q.author, answers: answers})
 	c.json result
 
-app.post "/api/questions", do |c|
+app.post "/api/questions", do(c)
 	authData = verify c
 	if authData.code != 200
 		return c.json {ok: no}
@@ -61,14 +63,14 @@ app.post "/api/questions", do |c|
 			.run(info.lastInsertRowid, ans.text, (if ans.correct then 1 else 0))
 	c.json {ok: yes}
 
-app.delete "/api/questions", do |c|
+app.delete "/api/questions", do(c)
 	if (verify c).code != 200
 		return c.json {ok: no}
 	db.prepare("DELETE FROM answers").run!
 	db.prepare("DELETE FROM questions").run!
 	c.json {ok: yes}
 
-app.post "/api/check", do |c|
+app.post "/api/check", do(c)
 	let answers = await c.req.json!
 	let score = 0
 	for item in answers
@@ -77,7 +79,7 @@ app.post "/api/check", do |c|
 			score++
 	c.json {score: score, total: answers.length}
 
-app.post '/api/session', do |c|
+app.post '/api/session', do(c)
 	const auth = c.req.header "authorization"
 	unless auth
 		return c.text "Missing Authorization header", 401
@@ -94,19 +96,19 @@ app.post '/api/session', do |c|
 	}
 	c.json {ok: yes}
 
-app.post "/api/logout", do |c|
+app.post "/api/logout", do(c)
 	const ret = deleteCookie c, "session", {
 		path: '/'
 	}
 	c.json { ok: yes }
 
-app.get '/api/me', do |c|
+app.get '/api/me', do(c)
 	const status = verify c
 	if status.code === 200
 		return c.json {user: status.data.email}
 	c.text status.text, status.code
 
-app.get "*", do |c|
+app.get "*", do(c)
 	c.html index.body
 
 imba.serve serve({fetch: app.fetch, port:8080})

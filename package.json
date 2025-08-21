@@ -1,19 +1,22 @@
 {
   "name": "imba-flash-cards-test-project",
   "scripts": {
-    "dev": "imba -w ./src/server/server.imba",
+    "dev": "imba -wd ./src/server/server.imba",
     "build": "imba build ./src/server/server.imba",
     "preview": "node dist/server.js",
     "stop": "npx --yes kill-port 8080",
     "start": "npm run stop && npm run build && npm run preview"
   },
   "dependencies": {
-    "hono": "^4.6.10",
     "@hono/node-server": "^1.19.0",
-    "magic-sdk": "^29.4.2",
     "@magic-sdk/admin": "^2.4.1",
+    "better-sqlite3": "^9.0.0",
+    "hono": "^4.6.10",
+    "i18next": "^25.4.0",
+    "i18next-browser-languagedetector": "^8.2.0",
+    "i18next-resources-to-backend": "^1.2.1",
     "jsonwebtoken": "^9.0.2",
-    "better-sqlite3": "^9.0.0"
+    "magic-sdk": "^29.4.2"
   },
   "devDependencies": {
     "imba": "^2.0.0-alpha.237"

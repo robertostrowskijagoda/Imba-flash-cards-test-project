@@ -1,10 +1,22 @@
 import { Magic } from 'magic-sdk'
+import i18n from 'i18next'
+import i18next-lang-detector from 'i18next-browser-languagedetector'
+import i18next-resources from 'i18next-resources-to-backend'
 
 const magic = new Magic("pk_live_8660C390804C3649")
 
+i18n.use(i18next-lang-detector).use(
+	i18next-resources do |lang, ns| 
+		const res = await window.fetch "/api/resources/locales/{lang}/{ns}.json"
+		await res.text!
+	).init({
+	fallbackLng: "en"
+	debug: yes
+})
+
 def login email
 	const didToken = await magic.auth.loginWithMagicLink { email } # Czy nawiasy {} są tu potrzebne? Dlaczego?
-	await fetch '/api/session', {
+	await window.fetch '/api/session', {
 		method: 'POST'
 		headers: {
 			Authorization: "Bearer {didToken}",
@@ -48,7 +60,7 @@ tag QuizPage
 		unless questions.length === 0
 			for q in questions
 				<div [mb:4 p:4 b:1px rd:lg bgc:red1]>
-					<p [fs:30px ta:center]> "Autor: {q.author} Pytanie: {q.text}"
+					<p [fs:30px ta:center]> "{i18n.t "Author"}: {q.author} {i18n.t "Question"}: {q.text}"
 					<div [mt:2]>
 						for ans in q.answers
 							<label [d:block my:1 c:gray6]>
@@ -60,7 +72,7 @@ tag QuizPage
 								>
 								<span [pos:relative t:-5px r:-5px fs:30px]> "{ans.text}"
 		
-			<button [js:center bg:blue5 c:white px:4 py:2 rd:16px w:50% mx:25% h:80px] @click=submit> "Wyślij"
+			<button [js:center bg:blue5 c:white px:4 py:2 rd:16px w:50% mx:25% h:80px] @click=submit> "{i18n.t "Send"}"
 
 tag SummaryPage
 	prop score = {score:0, total:0}
@@ -71,8 +83,8 @@ tag SummaryPage
 
 	<self [mx:auto p:4 js:center]>
 		if score
-			<p [fs:lg js:center fs:50px mb:50px ff:"Comic Sans MS", "Comic Sans"]> "Twój wynik: {score.score} / {score.total}"
-			<a [js:center fs:50px mb:50px] route-to="/quiz" [c:blue5 hover:underline mt:4 d:block]> "Spróbuj ponownie"
+			<p [fs:lg js:center fs:50px mb:50px ff:"Comic Sans MS", "Comic Sans"]> "{i18n.t "Your score"}: {score.score} / {score.total}"
+			<a [js:center fs:50px mb:50px] route-to="/quiz" [c:blue5 hover:underline mt:4 d:block]> "{i18n.t "Try again"}"
 
 tag AdminPage
 	prop question = ""
@@ -81,7 +93,7 @@ tag AdminPage
 	def mount
 		const res = await window.fetch "/api/me"
 		if res.status === 401
-			const email = window.prompt "Podaj swój email do logowania:"
+			const email = window.prompt "{i18n.t "email-login-prompt"}:"
 			if email
 				await login email
 				imba.commit!
@@ -104,11 +116,11 @@ tag AdminPage
 					answers = Array(6).fill("")
 					imba.commit!
 				else
-					window.alert "Wystąpił błąd podczas dodawania pytania!"
+					window.alert "{i18n.t "admin.submit.error.backend"}"
 			else
-				window.alert "Pytanie i co najmniej dwie odpowiedzi są wymagane!"
+				window.alert "{i18n.t "admin.submit.error.no-question-or-less-than-2-answers"}"
 		else
-			window.alert "Poprawna odpowiedź jest wymagana!"
+			window.alert "{i18n.t "admin.submit.error.no-proper-answer"}"
 
 	def clear
 		await window.fetch "/api/questions", { method: "DELETE" }
@@ -119,26 +131,26 @@ tag AdminPage
 		window.location.replace "/quiz"
 
 	<self [mx:auto p:4]>
-		<h1 [fs:2xl fw:bold mb:4 js:center fs:50px mb:50px ff:"Comic Sans MS", "Comic Sans", cursive]> "Panel administratora"
+		<h1 [fs:2xl fw:bold mb:4 js:center fs:50px mb:50px ff:"Comic Sans MS", "Comic Sans", cursive]> "{i18n.t "Administrator panel"}"
 		<div [d:flex fld:column gap:2]>
 			<input type="text" placeholder="Pytanie" bind=question [p:2 b:1px rd]>
 			for a, i in answers
 				<input 
 					type="text" 
-					placeholder="Odpowiedź #{i+1} {(i === 0 ? "" : "NIE")}POPRAWNA"
+					placeholder="Odpowiedź #{i+1} {(i === 0 ? "" : "{i18n.t "quiz.question.answer.placeholder.not-sufix"}")}{i18n.t "quiz.question.answer.placeholder.proper-prefix"}"
 					bind=answers[i]
 					[p:2 b:1px rd:lg]
 				>
-			<button @click=submit [bg:green5 c:white px:2 py:4 rd:lg]> "Dodaj pytanie"
-			<button @click=clear [bg:red5 c:white px:2 py:4 rd:lg]> "Skasuj wszystkie pytania"
-			<button @click=logOut [bg:red5 c:white px:2 py:4 rd:lg]> "Wyloguj się"
+			<button @click=submit [bg:green5 c:white px:2 py:4 rd:lg]> "{i18n.t "Add question"}"
+			<button @click=clear [bg:red5 c:white px:2 py:4 rd:lg]> "{i18n.t "Delete all questions"}"
+			<button @click=logOut [bg:red5 c:white px:2 py:4 rd:lg]> "{i18n.t "Logout"}"
 
 tag App
 
 	prop paths = [
-		{path: "/quiz", tg: QuizPage, name: "Quiz", visible: yes}
-		{path: "/summary", tg: SummaryPage, name: "Podsumowanie", visible: no}
-		{path: "/admin", tg: AdminPage, name: "Admin", visible: yes}
+		{path: "/quiz", tg: QuizPage, name: "{i18n.t "Quiz"}", visible: yes}
+		{path: "/summary", tg: SummaryPage, name: "{i18n.t "Summary"}", visible: no}
+		{path: "/admin", tg: AdminPage, name: "{i18n.t "Administrator panel"}", visible: yes}
 	]
 #	css @keyframes rot
 #		0% rotate: 10deg
