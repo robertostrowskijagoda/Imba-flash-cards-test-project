@@ -177,6 +177,6 @@ imba.mount <App>
 # Zakładam, że problemem jest to, że próbuję posługiwać się eventami między różnymi tagami, 
 # które nie są aktywne wszystkie na raz, jak to więc zrobić poprawnie, żeby nie posługiwać się localStorage?
 # 3. Co robi taka operacja { email } ? Dlaczego niektóre metody są tak: metoda(email), a inne tak: metoda({email})?
-# 4. Dlaczego nie działa to co jest w liniach 158-160, a to co jest 155-157 działa?
+# 4. Dlaczego nie działa to co jest w liniach 168-170, a to co jest 165-167 działa?
 # 5. Dlaczego nie działa linia 147?
 # 6. Co byś poprawił tutaj w stylu/składni?
