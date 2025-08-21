@@ -5,15 +5,6 @@ import i18next-resources from 'i18next-resources-to-backend'
 
 const magic = new Magic("pk_live_8660C390804C3649")
 
-i18n.use(i18next-lang-detector).use(
-	i18next-resources do |lang, ns| 
-		const res = await window.fetch "/resources/locales/{lang}/{ns}.json"
-		await res.text!
-	).init({
-	fallbackLng: "en"
-	debug: yes
-})
-
 def login email
 	const didToken = await magic.auth.loginWithMagicLink { email } # Czy nawiasy {} są tu potrzebne? Dlaczego?
 	await window.fetch '/api/session', {
@@ -56,7 +47,7 @@ tag QuizPage
 		array
 
 	<self [mx:auto p:4]>
-		<h1 [fs:2xl fw:bold mb:4 b:flex ta:center fs:50px ff:"Comic Sans MS", "Comic Sans"]> "Quiz"
+		<h1 [fs:2xl fw:bold mb:4 b:flex ta:center fs:50px ff:"Comic Sans MS", "Comic Sans"]> "{i18n.t "Quiz"}"
 		unless questions.length === 0
 			for q in questions
 				<div [mb:4 p:4 b:1px rd:lg bgc:red1]>
@@ -137,7 +128,7 @@ tag AdminPage
 			for a, i in answers
 				<input 
 					type="text" 
-					placeholder="Odpowiedź #{i+1} {(i === 0 ? "" : "{i18n.t "quiz.question.answer.placeholder.not-sufix"}")}{i18n.t "quiz.question.answer.placeholder.proper-prefix"}"
+					placeholder="Odpowiedź #{i+1} {(i === 0 ? "" : "{i18n.t "quiz.question.answer.placeholder.not-prefix"}")}{i18n.t "quiz.question.answer.placeholder.proper-sufix"}"
 					bind=answers[i]
 					[p:2 b:1px rd:lg]
 				>
@@ -147,11 +138,24 @@ tag AdminPage
 
 tag App
 
-	prop paths = [
-		{path: "/quiz", tg: QuizPage, name: "{i18n.t "Quiz"}", visible: yes}
-		{path: "/summary", tg: SummaryPage, name: "{i18n.t "Summary"}", visible: no}
-		{path: "/admin", tg: AdminPage, name: "{i18n.t "Administrator panel"}", visible: yes}
-	]
+	prop paths = []
+
+	def setup
+		if paths.length === 0
+			i18n.use(i18next-lang-detector).use(
+				i18next-resources do |lang, ns| 
+					const res = await window.fetch "/resources/locales/{lang}/{ns}.json"
+					res.status == 404 ? null : await res.json!
+			).init({
+				fallbackLng: "en"
+				debug: yes
+			}) do
+				imba.commit!
+				paths = [
+					{path: "/quiz", tg: QuizPage, name: "{i18n.t "Quiz"}", visible: yes}
+					{path: "/summary", tg: SummaryPage, name: "{i18n.t "Summary"}", visible: no}
+					{path: "/admin", tg: AdminPage, name: "{i18n.t "Administrator panel"}", visible: yes}
+				]
 #	css @keyframes rot
 #		0% rotate: 10deg
 #		100% rotate: 0deg
@@ -174,9 +178,12 @@ tag App
 					<button.nav-link route-to=path.path> path.name
 
 		<main>
-			<{paths[0].tg} route=paths[0].path>
-			<{paths[1].tg} route=paths[1].path>
-			<{paths[2].tg} route=paths[2].path>
+			if paths.length === 0
+				<h1> "LOADING..."
+			else
+				<{paths[0].tg} route=paths[0].path>
+				<{paths[1].tg} route=paths[1].path>
+				<{paths[2].tg} route=paths[2].path>
 #			for path in paths
 #				<{path.tg} route=path.path>
 #				console.log("{path.tg.nodeName} {path.path}")

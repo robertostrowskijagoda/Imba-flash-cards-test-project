@@ -1,3 +1,33 @@
 {
-    "key": "key"
+    "Quiz": "Quiz",
+    "Author": "Author",
+    "Question": "Question",
+    "Send": "Send",
+    "Your score": "Your score",
+    "Try again": "Try again",
+    "Administrator panel": "Administrator panel",
+    "Add question": "Add question",
+    "Delete all questions": "Delete all questions",
+    "Logout": "Logout",
+    "Summary": "Summary",
+    "email-login-prompt": "Provide email used to login",
+    "admin": {
+        "submit": {
+            "error": {
+                "backend": "Server refuses to save!",
+                "no-question-or-less-than-2-answers": "You need to provide question and at least 2 answers!",
+                "no-proper-answer": "You need to provide proper (first) answer!"
+            }
+        }
+    },
+    "quiz": {
+        "question": {
+            "answer": {
+                "placeholder": {
+                    "not-prefix": "NOT",
+                    "proper-sufix": "PROPER"
+                }
+            }
+        }
+    }
 }

@@ -1,0 +1,33 @@
+{
+    "Quiz": "Quiz",
+    "Author": "Autor",
+    "Question": "Pytanie",
+    "Send": "Wyślij",
+    "Your score": "Twój wynik",
+    "Try again": "Spróbuj ponownie",
+    "Administrator panel": "Panel administracyjny",
+    "Add question": "Dodaj pytanie",
+    "Delete all questions": "Skasuj wszystkie pytania",
+    "Logout": "Wyloguj",
+    "Summary": "Podsumowanie",
+    "email-login-prompt": "Podaj email, którym chcesz się zalogować",
+    "admin": {
+        "submit": {
+            "error": {
+                "backend": "Server odmawia zapisania!",
+                "no-question-or-less-than-2-answers": "Musisz podać pytanie i conajmniej dwie odpowiedzi!",
+                "no-proper-answer": "Musisz podać poprawną (pierwszą) odpowiedź!"
+            }
+        }
+    },
+    "quiz": {
+        "question": {
+            "answer": {
+                "placeholder": {
+                    "not-prefix": "NIE",
+                    "proper-sufix": "POPRAWNA"
+                }
+            }
+        }
+    }
+}

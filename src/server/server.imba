@@ -2,7 +2,7 @@ import { serve } from '@hono/node-server'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { setCookie, getCookie, deleteCookie } from 'hono/cookie'
 import { Hono } from 'hono'
-import { logger } from 'hono/logger'
+import { HTTPException } from 'hono/http-exception'
 import { Magic } from '@magic-sdk/admin';
 import jwt from 'jsonwebtoken'
 import Database from 'better-sqlite3'
@@ -43,9 +43,10 @@ db.prepare("""
 
 let app = new Hono!
 
-app.use logger!
+app.use "/resources/*", serveStatic({root: "./"})
 
-app.use "/resources/*", serveStatic({root: "./resources"})
+app.get "/resources/*", do(c)
+	throw new HTTPException(404, { message: "No such resource" })
 
 app.get "/api/questions", do(c)
 	let questions = db.prepare("SELECT * FROM questions").all!
