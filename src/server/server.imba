@@ -116,9 +116,3 @@ app.get "*", do(c)
 	c.html index.body
 
 imba.serve serve({fetch: app.fetch, port:8080})
-
-# Pytania:
-# 1. Gdzie trzymać tokeny?
-# 2. Dlaczego na kursie pokazywali mi "do (parametr)", a tutaj muszę robić "do |parametr|"? Zmieniła się wersja?
-# 3. Co byś tu poprawił w stylu/składni?
-# 4. Czy coś byś tu poprawił pod kątem security? Może jakieś ustawienia cookie? 

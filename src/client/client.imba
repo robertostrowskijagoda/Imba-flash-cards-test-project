@@ -92,9 +92,9 @@ tag AdminPage
 				window.location.replace "/quiz"
 	  
 	def submit
-		let formatted = answers.map do |ans, idx| { text: ans, correct: idx === 0 }
+		let formatted = answers.map do(ans, idx) { text: ans, correct: idx === 0 }
 		if formatted[0].text.trim!
-			formatted = formatted.filter do |data|
+			formatted = formatted.filter do(data)
 				data.text.trim!
 			if question.trim! and formatted.length > 1
 				const res = await window.fetch "/api/questions", {
@@ -143,7 +143,7 @@ tag App
 	def setup
 		if paths.length === 0
 			i18n.use(i18next-lang-detector).use(
-				i18next-resources do |lang, ns| 
+				i18next-resources do(lang, ns) 
 					const res = await window.fetch "/resources/locales/{lang}/{ns}.json"
 					res.status == 404 ? null : await res.json!
 			).init({
@@ -156,9 +156,10 @@ tag App
 					{path: "/summary", tg: SummaryPage, name: "{i18n.t "Summary"}", visible: no}
 					{path: "/admin", tg: AdminPage, name: "{i18n.t "Administrator panel"}", visible: yes}
 				]
-#	css @keyframes rot
-#		0% rotate: 10deg
-#		100% rotate: 0deg
+
+	css @keyframes rot
+		0% rotate: 10deg
+		100% rotate: 0deg
 
 	css .nav-link
 		bgc: yellow3
@@ -170,7 +171,8 @@ tag App
 		my: 30px
 		rd: 10px
 		rotate: 10deg rotate@hover: 0deg
-# 		@hover animation: rot 2s
+		tween: all 350ms ease
+
 	<self>
 		<nav [bg:gray1 p:4 mxy:25 d:flex gap:10 jc:center bxs:md]>
 			for path in paths
@@ -181,12 +183,8 @@ tag App
 			if paths.length === 0
 				<h1> "LOADING..."
 			else
-				<{paths[0].tg} route=paths[0].path>
-				<{paths[1].tg} route=paths[1].path>
-				<{paths[2].tg} route=paths[2].path>
-#			for path in paths
-#				<{path.tg} route=path.path>
-#				console.log("{path.tg.nodeName} {path.path}")
+				for path in paths
+					<{path.tg} route=path.path>
 
 imba.mount <App>
 
@@ -195,7 +193,3 @@ imba.mount <App>
 # 2. Dlaczego nie działają mi eventy? Co robię źle? 
 # Zakładam, że problemem jest to, że próbuję posługiwać się eventami między różnymi tagami, 
 # które nie są aktywne wszystkie na raz, jak to więc zrobić poprawnie, żeby nie posługiwać się localStorage?
-# 3. Co robi taka operacja { email } ? Dlaczego niektóre metody są tak: metoda(email), a inne tak: metoda({email})?
-# 4. Dlaczego nie działa to co jest w liniach 168-170, a to co jest 165-167 działa?
-# 5. Dlaczego nie działa linia 147?
-# 6. Co byś poprawił tutaj w stylu/składni?
