@@ -1,27 +1,16 @@
 import { serve } from '@hono/node-server'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { setCookie, getCookie, deleteCookie } from 'hono/cookie'
-import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
-import { Magic } from '@magic-sdk/admin';
+import { Hono } from 'hono'
 import jwt from 'jsonwebtoken'
 import Database from 'better-sqlite3'
+import { sendEmail } from './email'
 import index from '../client/index.html'
 
 const db = Database('quiz.db')
 # REMOVE FROM CODE!
 const JWT_SECRET = "3YdLeFVVwGhXU75jDyWVKp3ByYDjBebbmpS6kzgrrxrm5LbiAK3yi8E9IDG2n3TXnjrwOzVokhU9xianepnwlbnDE3OMClnpMseCqb9vxcAbLTjLsczAlpQkUrEAqrqc58wAjMAutm84TB94trXT4vY6GFZAEVsGnp8rB5w3NA5nnB6SrFXSGooF8DTySoMzmThY4grojghN6tchVyMALIuTbJp6WrLU6hNCLh4nmIzraucZy93yGgQKEgXHtStH"
-const magic = new Magic "sk_live_F9C3872036DC264C" # REMOVE FROM CODE!
-
-def verify c
-	const token = getCookie c, 'session'
-	unless token
-		return {data: "Not logged in", code: 401}
-	try
-		const decoded = jwt.verify token, JWT_SECRET
-		return {data: decoded, code: 200}
-	catch e
-		return {data: "Invalid session", code: 401}
 
 db.prepare("""
 	CREATE TABLE IF NOT EXISTS questions (
@@ -40,6 +29,41 @@ db.prepare("""
 		FOREIGN KEY(question_id) REFERENCES questions(id)
 	)
 """).run!
+
+db.prepare("""
+	CREATE TABLE IF NOT EXISTS tokens (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		expires INTEGER,
+		email TEXT NOT NULL,
+		token TEXT NOT NULL
+	)
+""").run!
+
+setInterval(update, 5000)
+
+def update
+	autoDeleteOldTokens!
+
+def verify c
+	const token = getCookie c, 'session'
+	unless token
+		return {data: "Not logged in", code: 401}
+	try
+		const decoded = jwt.verify token, JWT_SECRET
+		return {data: decoded, code: 200}
+	catch e
+		return {data: "Invalid session", code: 401}
+
+def autoDeleteOldTokens
+	db.prepare("DELETE FROM tokens WHERE expires < ?").run(Date.now())
+
+def generateAndSaveToken email
+	const token = Buffer.from(crypto.randomUUID()).toString("base64")
+	db.prepare("INSERT INTO tokens (expires, email, token) VALUES (?, ?, ?)").run(Date.now() + (1000 * 60 * 15), email, token)
+	token
+
+def sendVerifyEmail email, token
+	sendEmail email, "test", "test", "test"
 
 let app = new Hono!
 
@@ -83,22 +107,26 @@ app.post "/api/check", do(c)
 			score++
 	c.json {score: score, total: answers.length}
 
-app.post '/api/session', do(c)
-	const auth = c.req.header "authorization"
-	unless auth
-		return c.text "Missing Authorization header", 401
-	const didToken = auth.slice 7
-	await magic.token.validate didToken
-	const metadata = await magic.users.getMetadataByToken didToken
-	const token = jwt.sign { email: metadata.email }, JWT_SECRET, { expiresIn: '1d' }
-	setCookie c, "session", token, { 
-		httpOnly: yes
-		secure: no # Na produkcji ma być "yes"
-		sameSite: "lax"
-		path: "/"
-		maxAge: 60 * 60 * 24
-	}
-	c.json {ok: yes}
+app.get "/login/:token", do(c)
+	const token = c.req.param('token')
+	const data = db.prepare("SELECT email FROM tokens WHERE token = ?").get(token)
+	if (data.email)
+		db.prepare("DELETE FROM tokens WHERE token = ?").run(token)
+		const token = jwt.sign { email: data.email }, JWT_SECRET, { expiresIn: '1d' }
+		setCookie c, "session", token, { 
+			httpOnly: yes
+			secure: no # Na produkcji ma być "yes"
+			sameSite: "lax"
+			path: "/"
+			maxAge: 60 * 60 * 24
+		}
+	c.text "Jesteś zalogowany, możesz zamknąć tę stronę"
+
+app.post "/api/verify", do(c)
+	const data = await c.req.json!
+	const token = generateAndSaveToken data.email
+	sendEmail data.email, "Quiz login", "Your login link: localhost:8080/login/{token}", "Your login link: localhost:8080/login/{token}"
+	c.json { ok: yes }
 
 app.post "/api/logout", do(c)
 	const ret = deleteCookie c, "session", {

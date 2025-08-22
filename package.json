@@ -16,7 +16,7 @@
     "i18next-browser-languagedetector": "^8.2.0",
     "i18next-resources-to-backend": "^1.2.1",
     "jsonwebtoken": "^9.0.2",
-    "magic-sdk": "^29.4.2"
+    "nodemailer": "^7.0.5"
   },
   "devDependencies": {
     "imba": "^2.0.0-alpha.237"

@@ -1,18 +1,16 @@
-import { Magic } from 'magic-sdk'
 import i18n from 'i18next'
 import i18next-lang-detector from 'i18next-browser-languagedetector'
 import i18next-resources from 'i18next-resources-to-backend'
 
-const magic = new Magic("pk_live_8660C390804C3649")
-
 def login email
-	const didToken = await magic.auth.loginWithMagicLink { email } # Czy nawiasy {} są tu potrzebne? Dlaczego?
-	await window.fetch '/api/session', {
-		method: 'POST'
-		headers: {
-			Authorization: "Bearer {didToken}",
-		}
-	}
+	console.log("login")
+	# const didToken = await magic.auth.loginWithMagicLink { email } # Czy nawiasy {} są tu potrzebne? Dlaczego?
+	# await window.fetch '/api/session', {
+	# 	method: 'POST'
+	# 	headers: {
+	# 		Authorization: "Bearer {didToken}",
+	# 	}
+	# }
 
 tag QuizPage
 	prop questions = []
@@ -118,7 +116,6 @@ tag AdminPage
 
 	def logOut
 		await window.fetch "/api/logout", { method: "POST" }
-		try await magic.user.logout!
 		window.location.replace "/quiz"
 
 	<self [mx:auto p:4]>
