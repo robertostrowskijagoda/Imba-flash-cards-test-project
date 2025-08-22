@@ -31,7 +31,7 @@ tag QuizPage
 			body: JSON.stringify(Array.from(Object.values(answers))) # Czy to można napisać bardziej w IMBA stylu?
 		}
 		const data = await res.json!
-		window.localStorage.setItem "summary", JSON.stringify(data) # USE EVENTS! Czy tu można napisać tak? window.localStorage.setItem "summary", JSON.stringify data
+		imba.emit "summary", data
 		window.location.replace '/summary'
 
 	def shuffle array
@@ -66,9 +66,11 @@ tag QuizPage
 tag SummaryPage
 	prop score = {score:0, total:0}
 
-	def mount
-		score = JSON.parse(window.localStorage.getItem "summary") # USE EVENTS! Czy tu można napisać tak? JSON.parse window.localStorage.getItem "summary"
-		window.localStorage.removeItem "summary" # USE EVENTS!
+	def awaken
+		imba.listen "summary" do(score)
+			score = score
+			console.log(score)
+			imba.commit!
 
 	<self [mx:auto p:4 js:center]>
 		if score

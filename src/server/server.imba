@@ -39,6 +39,12 @@ db.prepare("""
 	)
 """).run!
 
+let answers = [{text: "1", correct: yes},{text: "2", correct: no}]
+let info = db.prepare("INSERT INTO questions (text, author) VALUES (?, ?)").run("Czy?", "Ktoś@ktoś.com")
+for ans in answers
+	db.prepare("INSERT INTO answers (question_id, text, correct) VALUES (?, ?, ?)")
+		.run(info.lastInsertRowid, ans.text, (if ans.correct then 1 else 0))
+
 setInterval(update, 5000)
 
 def update
