@@ -103,7 +103,7 @@ const transporter = nodemailer.createTransport { host: 's144.cyber-folks.pl', po
 
 export def sendEmail email, subject, text, html
 	await transporter.sendMail {
-		from: 'noreply@quiz.com'
+		from: 'noreply@leonardossa.com'
 		to: email
 		subject: subject
 		text: text

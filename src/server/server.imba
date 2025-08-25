@@ -39,12 +39,6 @@ db.prepare("""
 	)
 """).run!
 
-let answers = [{text: "1", correct: yes},{text: "2", correct: no}]
-let info = db.prepare("INSERT INTO questions (text, author) VALUES (?, ?)").run("Czy?", "Ktoś@ktoś.com")
-for ans in answers
-	db.prepare("INSERT INTO answers (question_id, text, correct) VALUES (?, ?, ?)")
-		.run(info.lastInsertRowid, ans.text, (if ans.correct then 1 else 0))
-
 setInterval(update, 5000)
 
 def update
@@ -87,6 +81,7 @@ app.get "/api/questions", do(c)
 	c.json result
 
 app.post "/api/questions", do(c)
+	console.log "1"
 	authData = verify c
 	if authData.code != 200
 		return c.json {ok: no}
@@ -114,10 +109,10 @@ app.post "/api/check", do(c)
 	c.json {score: score, total: answers.length}
 
 app.get "/login/:token", do(c)
-	const token = c.req.param('token')
-	const data = db.prepare("SELECT email FROM tokens WHERE token = ?").get(token)
-	if (data.email)
-		db.prepare("DELETE FROM tokens WHERE token = ?").run(token)
+	const base64Token = await c.req.param 'token'
+	const data = db.prepare("SELECT email FROM tokens WHERE token = ?").get(base64Token)
+	if data && data.email
+		db.prepare("DELETE FROM tokens WHERE token = ?").run(base64Token)
 		const token = jwt.sign { email: data.email }, JWT_SECRET, { expiresIn: '1d' }
 		setCookie c, "session", token, { 
 			httpOnly: yes
@@ -126,6 +121,8 @@ app.get "/login/:token", do(c)
 			path: "/"
 			maxAge: 60 * 60 * 24
 		}
+	else
+		return c.text "Link jest już nieważny"
 	c.text "Jesteś zalogowany, możesz zamknąć tę stronę"
 
 app.post "/api/verify", do(c)
@@ -144,7 +141,7 @@ app.get '/api/me', do(c)
 	const status = verify c
 	if status.code === 200
 		return c.json {user: status.data.email}
-	c.text status.text, status.code
+	c.json { status }
 
 app.get "*", do(c)
 	c.html index.body

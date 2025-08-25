@@ -2,15 +2,25 @@ import i18n from 'i18next'
 import i18next-lang-detector from 'i18next-browser-languagedetector'
 import i18next-resources from 'i18next-resources-to-backend'
 
+def sleep time
+	new Promise do(resolve)
+		setTimeout(resolve, time);
+
 def login email
 	console.log("login")
-	# const didToken = await magic.auth.loginWithMagicLink { email } # Czy nawiasy {} są tu potrzebne? Dlaczego?
-	# await window.fetch '/api/session', {
-	# 	method: 'POST'
-	# 	headers: {
-	# 		Authorization: "Bearer {didToken}",
-	# 	}
-	# }
+	await window.fetch '/api/verify', {
+		method: 'POST'
+		headers: {"Content-Type": "application/json"}
+		body: JSON.stringify { email }
+	}
+	window.alert "Check your email"
+	while !checkIfLoggedIn!
+		await sleep 500
+	
+def checkIfLoggedIn
+	const res = await window.fetch "/api/me"
+	const data = await res.json!
+	data.user
 
 tag QuizPage
 	prop questions = []
@@ -82,8 +92,7 @@ tag AdminPage
 	prop answers = Array(6).fill "" # Czy tu można napisać tak? Array 6 .fill ""
 
 	def mount
-		const res = await window.fetch "/api/me"
-		if res.status === 401
+		unless await checkIfLoggedIn!
 			const email = window.prompt "{i18n.t "email-login-prompt"}:"
 			if email
 				await login email
@@ -182,8 +191,8 @@ tag App
 			if paths.length === 0
 				<h1> "LOADING..."
 			else
-				for path in paths
-					<{path.tg} route=path.path>
+				<QuizPage route="/quiz">
+				<AdminPage route="/admin">
 
 imba.mount <App>
 
